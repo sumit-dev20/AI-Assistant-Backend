@@ -17,7 +17,5 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "python-jose>=3.5.0",
     "streamlit>=1.56.0",
-    "uvicorn>=0.46.0",
-    "weaviate>=0.1.2",
-    "weaviate-client>=4.21.0",
+    "uvicorn>=0.46.0"   
 ]
