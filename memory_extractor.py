@@ -3,50 +3,82 @@ import os
 from dotenv import load_dotenv
 import json
 
-load_dotenv()
+load_dotenv(override=True)
 
-llm = ChatOpenAI()
+llm = ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 def extract_memory(user_input):
     prompt = f"""
-You are a memory extraction AI.
+You are an AI memory system.
 
-Decide if the following conversation contains important long-term memory about the user.
+Analyze the user's message.
 
-If YES, return JSON:
+Your tasks:
+1. Detect intent:
+   - "store" → user shares personal information, goals, preferences, facts
+   - "retrieve" → user asks about previous memories
+   - "other" → anything else
+
+2. If intent is "store":
+   Extract concise long-term memory.
+
+Return ONLY valid JSON.
+
+Format:
+
 {{
-    "store": true,
-    "memory": "<short concise memory>",
-    "type": "<goal | preference | personal | behavior>"
+    "intent": "store | retrieve | other",
+    "store": true/false,
+    "memory": "<memory text>",
+    "type": "goal | preference | personal | behavior"
 }}
 
-If NO, return:
+If no memory should be stored:
+
 {{
+    "intent": "other",
     "store": false
 }}
-
 
 Examples:
 
 Input:
-User: I want to become an AI engineer
+"I want to become an AI engineer"
+
 Output:
-{{"store": true, "memory": "User's goal is to become an AI engineer", "type": "goal"}}
+{{
+    "intent": "store",
+    "store": true,
+    "memory": "User's goal is to become an AI engineer",
+    "type": "goal"
+}}
 
 Input:
-User: What is Python?
+"What is my goal?"
+
 Output:
-{{"store": false}}
+{{
+    "intent": "retrieve",
+    "store": false
+}}
 
 Input:
-User: I like working out in the morning
+"What is Python?"
+
 Output:
-{{"store": true, "memory": "User prefers morning workouts", "type": "preference"}}
+{{
+    "intent": "other",
+    "store": false
+}}
 
+User Message:
+{user_input}
 
-Conversation:
-User: {user_input}
+IMPORTANT:
+- Return ONLY JSON
+- No markdown
+- No explanation
 
 **DO NOT GIVE ANY PREAMBLE**
 """
@@ -60,37 +92,3 @@ User: {user_input}
     except:
         return {"store": False}
 
-
-def classify_intent(user_input):
-    response = llm.invoke(
-        [
-            {
-                "role": "system",
-                "content": """
-Classify user intent into one of:
-
-- "store" → user is sharing personal info (goal, preference, fact)
-- "retrieve" → user is asking about past info
-- "other" → anything else
-
-Examples:
-
-"I want to become AI engineer" → store
-"My name is Sumit" → store
-"I like gym in morning" → store
-
-"What is my goal" → retrieve
-"Tell me my dream" → retrieve
-"Do you remember my name" → retrieve
-
-"What is Python" → other
-
-Return JSON:
-{"intent": "..."}
-""",
-            },
-            {"role": "user", "content": user_input},
-        ]
-    )
-
-    return json.loads(response.content)
