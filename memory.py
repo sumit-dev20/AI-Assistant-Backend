@@ -52,7 +52,7 @@ def cosine_similarity(vec1, vec2):
     return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
 
 
-def is_duplicate(user_id, new_memory, threshold=0.85):
+def is_duplicate(user_id, new_memory, threshold=0.95):
     new_embedding = embed(new_memory)
 
     results = collection.query(
